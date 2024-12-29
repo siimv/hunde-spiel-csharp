@@ -1,4 +1,4 @@
-using ConfoundedDogGame;
+namespace ConfoundedDogGame;
 
 public static class Game
 {
