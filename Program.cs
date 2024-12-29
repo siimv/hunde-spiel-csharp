@@ -1,23 +1,20 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using ConfoundedDogGame;
+using ConfoundedDogGame.Players;
+using ConfoundedDogGame.Visualizers;
 
-var visualizer = new AsciiVisualizer();
-var board = new Game().Board;
+var visualizer = new DefaultVisualizer();
+var game = new Game();
 
-// var player = new BruteForcePlayer();
-// board = player.Play(board);
+var player = new BruteForcePlayer(game.Tiles);
+var boards = player.Play();
 
 // Console.WriteLine(visualizer.Visualize(board.Tiles.First()));
-Console.WriteLine(visualizer.VisualizeBoard(board));
-
-public class BruteForcePlayer
+foreach (var board in boards)
 {
-    public Board Play(Board board)
-    {
-        
-        return board;
-    }
+    Console.WriteLine("----------");
+    Console.WriteLine(visualizer.VisualizeBoard(board));
 }
 
 public class Game

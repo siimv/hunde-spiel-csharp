@@ -1,18 +1,19 @@
 using System.Text;
 
-namespace ConfoundedDogGame;
+namespace ConfoundedDogGame.Visualizers;
 
 public class AsciiVisualizer : IVisualizer
 {
-    public string VisualizeBoard(Card[][] board)
+    public string VisualizeBoard(Board board)
     {
         var sb = new StringBuilder();
 
-        sb.Append(Visualize(board[0]));
+        sb.AppendLine($"Is complete: {board.IsComplete}");
+        sb.Append(Visualize(board.Rows[0]));
         sb.AppendLine();
-        sb.Append(Visualize(board[1]));
+        sb.Append(Visualize(board.Rows[1]));
         sb.AppendLine();
-        sb.Append(Visualize(board[2]));
+        sb.Append(Visualize(board.Rows[2]));
         
         return sb.ToString();
     }
@@ -36,12 +37,12 @@ public class AsciiVisualizer : IVisualizer
 
         string Top(Card card)
         {
-            return $"--{Map(card.TopSide)}--";
+            return $"--{Map(card?.TopSide)}--";
         }
 
         string Middle(Card card)
         {
-            return $"{Map(card.LeftSide)} {card.Number} {Map(card.RightSide)}";
+            return $"{Map(card?.LeftSide)} {card?.Number.ToString() ?? "x"} {Map(card?.RightSide)}";
         }
         
         string Empty()
@@ -51,7 +52,7 @@ public class AsciiVisualizer : IVisualizer
         
         string Bottom(Card card)
         {
-            return $"--{Map(card.BottomSide)}--";
+            return $"--{Map(card?.BottomSide)}--";
         }
     }
     
@@ -68,28 +69,30 @@ public class AsciiVisualizer : IVisualizer
         return sb.ToString();
     }
 
-    private string Map(Side side)
+    private string Map(Side? side)
     {
-        return $"{Map(side.Pattern)}{Map(side.Part)}";
+        return $"{Map(side?.Pattern)}{Map(side?.Part)}";
     }
     
-    private string Map(BodyPart part)
+    private string Map(BodyPart? part)
     {
         return part switch
         {
             BodyPart.Head => "H",
             BodyPart.Tail => "T",
+            _ => "?"
         };
     }
     
-    private string Map(Pattern pattern)
+    private string Map(Pattern? pattern)
     {
         return pattern switch
         {
             Pattern.Brown => "B",
             Pattern.Grey => "G",
             Pattern.Spotted => "S",
-            Pattern.Umber => "M",
+            Pattern.Umber => "U",
+            _ => "?"
         };
     }
 }
