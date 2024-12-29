@@ -1,14 +1,12 @@
 namespace ConfoundedDogGame.Players;
 
-public class BruteForcePlayer
+public class BruteForcePlayer(IEnumerable<Card> cards)
 {
-    private readonly Card[] _cards;
+    private readonly Card[] _cards = [..cards];
 
-    public BruteForcePlayer(IEnumerable<Card> cards)
-    {
-        _cards = [..cards];
-    }
-
+    /// <summary>
+    /// Actual player which tries to fill all the tiles on a board correctly
+    /// </summary>
     private class Player
     {
         private readonly HashSet<Card> _availableCards;
@@ -35,40 +33,43 @@ public class BruteForcePlayer
             return card;
         }
 
+        /// <summary>
+        /// Starts the player with empty board
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<Board> Play()
         {
             return Play(null);
         }
         
-        private Func<Board, Queue<Card>>[][] NextCardAccessors =>
+        /// <summary>
+        /// Card matchers for each specific place
+        /// </summary>
+        private Func<Queue<Card>>[][] NextCardAccessors =>
         [
             [
-                b => new(_availableCards),
-                b => new(_availableCards.FindCards(b[0, 0]!.RightSide)),
-                b => new(_availableCards.FindCards(b[0, 1]!.RightSide))
+                () => new(_availableCards),
+                () => new(_availableCards.FindCards(_board[0, 0]!.Right)),
+                () => new(_availableCards.FindCards(_board[0, 1]!.Right))
             ],
             [
-                b => new(_availableCards.FindCards(bottomSide: b[0, 0]!.BottomSide)),
-                b => new(_availableCards.FindCards(rightSide: b[1, 0]!.RightSide, bottomSide: b[0, 1]!.BottomSide)),
-                // b => []
-                b => new(_availableCards.FindCards(rightSide: b[1, 1]!.RightSide, bottomSide: b[0, 2]!.BottomSide))
+                () => new(_availableCards.FindCards(bottomSide: _board[0, 0]!.Bottom)),
+                () => new(_availableCards.FindCards(rightSide: _board[1, 0]!.Right, bottomSide: _board[0, 1]!.Bottom)),
+                () => new(_availableCards.FindCards(rightSide: _board[1, 1]!.Right, bottomSide: _board[0, 2]!.Bottom))
             ],
             [
-                // b => [],
-                // b => [],
-                // b => []
-                b => new(_availableCards.FindCards(bottomSide: b[1, 0]!.BottomSide)),
-                b => new(_availableCards.FindCards(rightSide: b[2, 0]!.RightSide, bottomSide: b[1, 1]!.BottomSide)),
-                b => new(_availableCards.FindCards(rightSide: b[2, 1]!.RightSide, bottomSide: b[1, 2]!.BottomSide))
+                () => new(_availableCards.FindCards(bottomSide: _board[1, 0]!.Bottom)),
+                () => new(_availableCards.FindCards(rightSide: _board[2, 0]!.Right, bottomSide: _board[1, 1]!.Bottom)),
+                () => new(_availableCards.FindCards(rightSide: _board[2, 1]!.Right, bottomSide: _board[1, 2]!.Bottom))
             ]
         ];
         
         private IEnumerable<Board> Play(Card? nextCard, int iStart = 0, int jStart = 0)
         {
-            for (int i = iStart; i < 3; i++)
+            for (var i = iStart; i < 3; i++)
             {
                 var jStartingPoint = iStart == i ? jStart : 0;
-                for (int j = jStartingPoint; j < 3; j++)
+                for (var j = jStartingPoint; j < 3; j++)
                 {
                     // Tile already filled
                     if (_board[i, j] != null) continue;
@@ -76,7 +77,7 @@ public class BruteForcePlayer
                     // Next card not specified, try to find possible cards
                     if (nextCard == null)
                     {
-                        var nextCards = NextCardAccessors[i][j](_board);
+                        var nextCards = NextCardAccessors[i][j]();
 
                         // select a single next card and proceed with the same board
                         // go until unable to find next card
@@ -116,16 +117,17 @@ public class BruteForcePlayer
         }
     }
     
+    /// <summary>
+    /// Returns only completed boards which are correct
+    /// </summary>
+    /// <returns></returns>
     public IReadOnlyCollection<Board> Play()
     {
         var boards = new Player(_cards).Play()
-            // .Where(x => x.IsComplete)
-            // .Where(x => x.IsCorrect())
+            .Where(x => x.IsComplete)
+            .Where(x => x.IsCorrect())
             .ToArray();
-
-        Console.WriteLine($"Total nr of boards: {boards.Length}");
-        Console.WriteLine($"Completed nr of boards: {boards.Count(x => x.IsComplete)}");
-        Console.WriteLine($"Correct nr of boards: {boards.Count(x => x.IsCorrect())}");
-        return boards.Where(x => x.IsComplete).ToArray();
+        
+        return boards;
     }
 }

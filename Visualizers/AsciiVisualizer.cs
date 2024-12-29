@@ -37,12 +37,12 @@ public class AsciiVisualizer : IVisualizer
 
         string Top(Card card)
         {
-            return $"--{Map(card?.TopSide)}--";
+            return $"--{Map(card?.Top)}--";
         }
 
         string Middle(Card card)
         {
-            return $"{Map(card?.LeftSide)} {card?.Number.ToString() ?? "x"} {Map(card?.RightSide)}";
+            return $"{Map(card?.Left)} {card?.Number.ToString() ?? "x"} {Map(card?.Right)}";
         }
         
         string Empty()
@@ -52,7 +52,7 @@ public class AsciiVisualizer : IVisualizer
         
         string Bottom(Card card)
         {
-            return $"--{Map(card?.BottomSide)}--";
+            return $"--{Map(card?.Bottom)}--";
         }
     }
     
@@ -60,11 +60,11 @@ public class AsciiVisualizer : IVisualizer
     {
         var sb = new StringBuilder();
 
-        sb.AppendFormat("--{0}--\n", Map(card.TopSide));
+        sb.AppendFormat("--{0}--\n", Map(card.Top));
         sb.AppendFormat("|    |\n");
-        sb.AppendFormat("{0}   {1}\n", Map(card.LeftSide), Map(card.RightSide));
+        sb.AppendFormat("{0}   {1}\n", Map(card.Left), Map(card.Right));
         sb.AppendFormat("|    |\n");
-        sb.AppendFormat("--{0}--", Map(card.BottomSide));
+        sb.AppendFormat("--{0}--", Map(card.Bottom));
         
         return sb.ToString();
     }
