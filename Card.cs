@@ -54,15 +54,6 @@ public class Card(int number, Side a, Side b, Side c, Side d) : IEquatable<Card>
         {
             var x = AllSides[i];
             if (!x.Equals(a.Opposite())) continue;
-            
-            if (i == 0)
-            {
-                return NextMatch(i);
-            }
-            if (i == AllSides.Length - 1)
-            {
-                return PreviousMatch(i);
-            }
                 
             if (NextMatch(i) || PreviousMatch(i)) return true;
         }
@@ -70,12 +61,16 @@ public class Card(int number, Side a, Side b, Side c, Side d) : IEquatable<Card>
 
         bool PreviousMatch(int index)
         {
-            return AllSides[index - 1].Equals(b.Opposite());
+            var previousIndex = index - 1;
+            if (previousIndex < 0) previousIndex = AllSides.Length - 1;
+            return AllSides[previousIndex].Equals(b.Opposite());
         }
 
         bool NextMatch(int index)
         {
-            return AllSides[index + 1].Equals(b.Opposite());
+            var nextIndex = index + 1;
+            if (nextIndex >= AllSides.Length) nextIndex = 0;
+            return AllSides[nextIndex].Equals(b.Opposite());
         }
     }
 }
@@ -90,6 +85,11 @@ public record Side(Pattern Pattern, BodyPart Part)
             BodyPart.Tail => BodyPart.Head,
         };
         return this with { Part = part };
+    }
+
+    public override string ToString()
+    {
+        return $"{Pattern}{Part}";
     }
 }
 

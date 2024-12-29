@@ -13,7 +13,7 @@ public class DefaultVisualizer : IVisualizer
     {
         var sb = new StringBuilder();
 
-        sb.Append($"[{board.IsComplete}]");
+        sb.Append($"[{board.IsComplete()}]");
         sb.Append(Visualize(board.Rows[0]));
         sb.Append("|");
         sb.Append(Visualize(board.Rows[1]));

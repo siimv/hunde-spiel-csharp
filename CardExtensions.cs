@@ -10,7 +10,7 @@ public static class CardExtensions
 
         if (rightSide != null && bottomSide != null)
         {
-            nextCards = nextCards.Where(x => !x.HasMatchingCorner(rightSide, bottomSide));
+            nextCards = nextCards.Where(x => x.HasMatchingCorner(rightSide, bottomSide));
         }
         
         foreach (var card in nextCards)

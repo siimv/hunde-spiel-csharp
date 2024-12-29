@@ -1,9 +1,7 @@
 namespace ConfoundedDogGame.Players;
 
-public class BruteForcePlayer(IEnumerable<Card> cards)
+public class BruteForcePlayer
 {
-    private readonly Card[] _cards = [..cards];
-
     /// <summary>
     /// Actual player which tries to fill all the tiles on a board correctly
     /// </summary>
@@ -21,8 +19,8 @@ public class BruteForcePlayer(IEnumerable<Card> cards)
 
         private Player(IEnumerable<Card> availableCards, IEnumerable<Card> usedCards, Board board)
         {
-            _availableCards = new(availableCards);
-            _usedCards = new(usedCards);
+            _availableCards = [..availableCards];
+            _usedCards = [..usedCards];
             _board = board;
         }
         
@@ -33,13 +31,22 @@ public class BruteForcePlayer(IEnumerable<Card> cards)
             return card;
         }
 
-        /// <summary>
-        /// Starts the player with empty board
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<Board> Play()
+        private static IEnumerable<Card> FindAllStartingCardCombinations(IEnumerable<Card> source)
         {
-            return Play(null);
+            foreach (var card in source)
+            {
+                var currentCard = card;
+                
+                // yield original card
+                yield return currentCard;
+                
+                // yield other rotations
+                foreach (var _ in Enumerable.Range(0, 3))
+                {
+                    currentCard = currentCard.Rotate();
+                    yield return currentCard;
+                }
+            }
         }
         
         /// <summary>
@@ -48,7 +55,7 @@ public class BruteForcePlayer(IEnumerable<Card> cards)
         private Func<Queue<Card>>[][] NextCardAccessors =>
         [
             [
-                () => new(_availableCards),
+                () => new(FindAllStartingCardCombinations(_availableCards)),
                 () => new(_availableCards.FindCards(_board[0, 0]!.Right)),
                 () => new(_availableCards.FindCards(_board[0, 1]!.Right))
             ],
@@ -64,7 +71,7 @@ public class BruteForcePlayer(IEnumerable<Card> cards)
             ]
         ];
         
-        private IEnumerable<Board> Play(Card? nextCard, int iStart = 0, int jStart = 0)
+        public IEnumerable<Board> Play(Card? nextCard = null, int iStart = 0, int jStart = 0)
         {
             for (var i = iStart; i < 3; i++)
             {
@@ -121,12 +128,9 @@ public class BruteForcePlayer(IEnumerable<Card> cards)
     /// Returns only completed boards which are correct
     /// </summary>
     /// <returns></returns>
-    public IReadOnlyCollection<Board> Play()
+    public IEnumerable<Board> Play(IEnumerable<Card> cards)
     {
-        var boards = new Player(_cards).Play()
-            .Where(x => x.IsComplete)
-            .Where(x => x.IsCorrect())
-            .ToArray();
+        var boards = new Player(cards).Play();
         
         return boards;
     }

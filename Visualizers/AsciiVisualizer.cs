@@ -8,7 +8,7 @@ public class AsciiVisualizer : IVisualizer
     {
         var sb = new StringBuilder();
 
-        sb.AppendLine($"Is complete: {board.IsComplete}");
+        sb.AppendLine($"Is complete: {board.IsComplete()}");
         sb.Append(Visualize(board.Rows[0]));
         sb.AppendLine();
         sb.Append(Visualize(board.Rows[1]));
