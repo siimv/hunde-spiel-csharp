@@ -11,24 +11,21 @@ public class BruteForcePlayer
 
     private class Player
     {
-        private readonly Card _startingCard;
         private readonly HashSet<Card> _availableCards;
         private readonly HashSet<Card> _usedCards;
         private readonly Board _board = Board.EmptyBoard();
         
-        public Player(IEnumerable<Card> cards, Card startingCard)
+        public Player(IEnumerable<Card> cards)
         {
-            _startingCard = startingCard;
             _availableCards = [..cards];
             _usedCards = [];
         }
 
-        private Player(IEnumerable<Card> availableCards, IEnumerable<Card> usedCards, Board board, Card startingCard)
+        private Player(IEnumerable<Card> availableCards, IEnumerable<Card> usedCards, Board board)
         {
             _availableCards = new(availableCards);
             _usedCards = new(usedCards);
             _board = board;
-            _startingCard = startingCard;
         }
         
         private Card UseCard(Card card)
@@ -37,191 +34,98 @@ public class BruteForcePlayer
             _usedCards.Add(card);
             return card;
         }
-        
-        private IEnumerable<Board> Process(int i, int j, CardWrapper nextCard, Func<Board, IEnumerable<Card>>[][] nextCardAccessor)
-        {
-            if (_board[i, j] != null) yield break;
-            
-            if (nextCard.Card != null)
-            {
-                _board[i, j] = UseCard(nextCard.Card);
-                nextCard.Card = null;
-
-                yield return _board;
-                yield break;
-            }
-            else
-            {
-                var accessor = nextCardAccessor[i][j](_board);
-                foreach (var board in FindOtherBoards(accessor))
-                {
-                    yield return board;
-                }
-            }
-            
-            IEnumerable<Board> FindOtherBoards(IEnumerable<Card> nextCards)
-            {
-                foreach (var card in nextCards)
-                {
-                    var player = new Player(_availableCards, _usedCards, _board.Clone(), _startingCard);
-                    foreach (var board in player.Play(new(card)))
-                    {
-                        yield return board;
-                    }
-                }
-            }
-        }
-
-        private class CardWrapper(Card? card = null)
-        {
-            public Card? Card { get; set; } = card;
-        }
 
         public IEnumerable<Board> Play()
         {
-            return Play(new());
+            return Play(null);
         }
         
-        private Func<Board, Queue<Card>>[][] _nextCardAccessors =>
+        private Func<Board, Queue<Card>>[][] NextCardAccessors =>
         [
             [
-                b => new([_startingCard]),
+                b => new(_availableCards),
                 b => new(_availableCards.FindCards(b[0, 0]!.RightSide)),
                 b => new(_availableCards.FindCards(b[0, 1]!.RightSide))
             ],
             [
                 b => new(_availableCards.FindCards(bottomSide: b[0, 0]!.BottomSide)),
                 b => new(_availableCards.FindCards(rightSide: b[1, 0]!.RightSide, bottomSide: b[0, 1]!.BottomSide)),
-                b => []
+                // b => []
+                b => new(_availableCards.FindCards(rightSide: b[1, 1]!.RightSide, bottomSide: b[0, 2]!.BottomSide))
             ],
             [
-                b => [],
-                b => [],
-                b => []
+                // b => [],
+                // b => [],
+                // b => []
+                b => new(_availableCards.FindCards(bottomSide: b[1, 0]!.BottomSide)),
+                b => new(_availableCards.FindCards(rightSide: b[2, 0]!.RightSide, bottomSide: b[1, 1]!.BottomSide)),
+                b => new(_availableCards.FindCards(rightSide: b[2, 1]!.RightSide, bottomSide: b[1, 2]!.BottomSide))
             ]
         ];
         
-        private IEnumerable<Board> Process2(int i, int j, CardWrapper nextCard, Func<Board, IEnumerable<Card>>[][] nextCardAccessor)
-        {
-            if (_board[i, j] != null) yield break;
-            
-            if (nextCard.Card != null)
-            {
-                _board[i, j] = UseCard(nextCard.Card);
-                nextCard.Card = null;
-
-                yield return _board;
-                yield break;
-            }
-            else
-            {
-                var accessor = nextCardAccessor[i][j](_board);
-                foreach (var board in FindOtherBoards(accessor))
-                {
-                    yield return board;
-                }
-            }
-            
-            IEnumerable<Board> FindOtherBoards(IEnumerable<Card> nextCards)
-            {
-                foreach (var card in nextCards)
-                {
-                    var player = new Player(_availableCards, _usedCards, _board.Clone(), _startingCard);
-                    foreach (var board in player.Play(new(card)))
-                    {
-                        yield return board;
-                    }
-                }
-            }
-        }
-        
-        private IEnumerable<Board> Play(CardWrapper nextCard, int iStart = 0, int jStart = 0)
+        private IEnumerable<Board> Play(Card? nextCard, int iStart = 0, int jStart = 0)
         {
             for (int i = iStart; i < 3; i++)
             {
-                for (int j = jStart; j < 3; j++)
+                var jStartingPoint = iStart == i ? jStart : 0;
+                for (int j = jStartingPoint; j < 3; j++)
                 {
                     // Tile already filled
                     if (_board[i, j] != null) continue;
 
-                    if (nextCard.Card == null)
+                    // Next card not specified, try to find possible cards
+                    if (nextCard == null)
                     {
-                        var nextCards = _nextCardAccessors[i][j](_board);
+                        var nextCards = NextCardAccessors[i][j](_board);
 
                         // select a single next card and proceed with the same board
                         // go until unable to find next card
                         if (nextCards.TryDequeue(out var card))
                         {
-                            nextCard.Card = card;
+                            nextCard = card;
                             
                             // if multiple branches (multiple next cards) then clone a board and start "sub-processes"
                             while (nextCards.TryDequeue(out var nCard))
                             {
-                                var player = new Player(_availableCards, _usedCards, _board.Clone(), _startingCard);
-                                foreach (var board in player.Play(new(nCard), i, j))
+                                var player = new Player(_availableCards, _usedCards, _board.Clone());
+                                foreach (var board in player.Play(nCard, i, j))
                                 {
                                     yield return board;
                                 }
                             }
                         }
-                        
-                        
-                        //TODO: Process other boards
-                        // foreach (var card in nextCards)
-                        // {
-                        //     var player = new Player(_availableCards, _usedCards, _board.Clone(), _startingCard);
-                        //     foreach (var board in player.Play(new(card)))
-                        //     {
-                        //         yield return board;
-                        //     }
-                        // }
                     }
                     
-                    if (nextCard.Card != null)
+                    // Next card found, fill the board and continue the loop
+                    if (nextCard != null)
                     {
-                        _board[i, j] = UseCard(nextCard.Card);
-                        nextCard.Card = null;
-
-                        // yield return _board;
-                        // yield break;
+                        _board[i, j] = UseCard(nextCard);
+                        nextCard = null;
                     }
                     else
                     {
-                        // Cannot proceed, end processing
+                        // Cannot find suitable card, end processing
                         yield return _board;
                         yield break;
                     }
-                    
-                    // if multiple branches (multiple next cards) then clone a board and start "sub-processes"
-                    // foreach (var board in Process(i, j, nextCard, nextCardAccessors))
-                    // {
-                    //     yield return board;
-                    // }
                 }
-
-                yield return _board;
-                yield break;
             }
             
-yield return _board;
+            // Return final board
+            yield return _board;
         }
     }
     
     public IReadOnlyCollection<Board> Play()
     {
-        List<Board> boards = [];
+        var boards = new Player(_cards).Play()
+            // .Where(x => x.IsComplete)
+            // .Where(x => x.IsCorrect())
+            .ToArray();
 
-        for (int i = 0; i < _cards.Length; i++)
-        {
-            boards.AddRange(new Player(_cards, _cards[i]).Play());
-            if (i==0) break;
-        }
-
-        Console.WriteLine($"Number of boards: {boards.Count}");
-        return boards;
-        // var board = boards
-        //     .OrderByDescending(x => x.Rows.Sum(r => r.Count(c => c != null)))
-        //     .FirstOrDefault();
-        // return board;
+        Console.WriteLine($"Total nr of boards: {boards.Length}");
+        Console.WriteLine($"Completed nr of boards: {boards.Count(x => x.IsComplete)}");
+        Console.WriteLine($"Correct nr of boards: {boards.Count(x => x.IsCorrect())}");
+        return boards.Where(x => x.IsComplete).ToArray();
     }
 }

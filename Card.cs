@@ -1,50 +1,5 @@
 namespace ConfoundedDogGame;
 
-public static class CardExtensions
-{
-    public static IEnumerable<Card> FindCards(this IEnumerable<Card> cards, Side? rightSide = null, Side? bottomSide = null, Side? topSide = null)
-    {
-        var nextCards = cards
-            .Where(x => rightSide == null || x.HasMatchingSide(rightSide))
-            .Where(x => bottomSide == null || x.HasMatchingSide(bottomSide))
-            .Where(x => topSide == null || x.HasMatchingSide(topSide));
-        
-        if (!nextCards.Any()) yield break;
-
-        if (rightSide != null && bottomSide != null)
-        {
-            nextCards = nextCards.Where(x => !x.HasMatchingCorner(rightSide, bottomSide));
-        }
-
-        if (rightSide != null && topSide != null)
-        {
-            nextCards = nextCards.Where(x => !x.HasMatchingCorner(rightSide, topSide));
-        }
-
-        if (topSide != null && bottomSide != null)
-        {
-            nextCards = nextCards.Where(x => !x.HasMatchingSides(topSide, bottomSide));
-        }
-        
-        foreach (var card in nextCards)
-        {
-            var nextCard = card;
-            while (!IsCorrectRotation(nextCard))
-            {
-                nextCard = nextCard.Rotate();
-            }
-        
-            yield return nextCard;
-        }
-        
-        bool IsCorrectRotation(Card nextCard)
-        {
-            return rightSide?.Equals(nextCard.LeftSide.Opposite()) 
-                   ?? bottomSide.Equals(nextCard.TopSide.Opposite());
-        }
-    }
-}
-
 public class Board
 {
     private readonly Card?[][] _cards;
@@ -56,9 +11,42 @@ public class Board
     
     public Card?[][] Rows => _cards;
     
-    public bool IsComplete => Rows[0].All(x => x != null)
-    && Rows[1].All(x => x != null);
+    // public bool IsComplete => Rows.Sum(r => r.Count(x => x != null)) == 6;
+    public bool IsComplete => Rows.All(r => r.All(x => x != null));
 
+    /// <summary>
+    /// This is just to validate the correctness of the board
+    /// </summary>
+    /// <returns></returns>
+    public bool IsCorrect()
+    {
+        if (!IsComplete) return false;
+
+        // First row
+        if (!_cards[0][0]!.RightSide.Equals(_cards[0][1]!.LeftSide.Opposite())) return false;
+        if (!_cards[0][1]!.RightSide.Equals(_cards[0][2]!.LeftSide.Opposite())) return false;
+        
+        // Second row
+        if (!_cards[1][0]!.RightSide.Equals(_cards[1][1]!.LeftSide.Opposite())) return false;
+        if (!_cards[1][0]!.TopSide.Equals(_cards[0][0]!.BottomSide.Opposite())) return false;
+        
+        if (!_cards[1][1]!.RightSide.Equals(_cards[1][2]!.LeftSide.Opposite())) return false;
+        if (!_cards[1][1]!.TopSide.Equals(_cards[0][1]!.BottomSide.Opposite())) return false;
+        
+        if (!_cards[1][2]!.TopSide.Equals(_cards[0][2]!.BottomSide.Opposite())) return false;
+        
+        // Third row
+        if (!_cards[2][0]!.RightSide.Equals(_cards[2][1]!.LeftSide.Opposite())) return false;
+        if (!_cards[2][0]!.TopSide.Equals(_cards[1][0]!.BottomSide.Opposite())) return false;
+        
+        if (!_cards[2][1]!.RightSide.Equals(_cards[2][2]!.LeftSide.Opposite())) return false;
+        if (!_cards[2][1]!.TopSide.Equals(_cards[1][1]!.BottomSide.Opposite())) return false;
+        
+        if (!_cards[2][2]!.TopSide.Equals(_cards[1][2]!.BottomSide.Opposite())) return false;
+        
+        return true;
+    }
+    
     public Board Clone()
     {
         return new(_cards.Select(x => x.Select(c => c?.Clone()).ToArray()).ToArray());
