@@ -1,22 +1,21 @@
-namespace ConfoundedDogGame;
+namespace ConfoundedDogGame.Players;
 
 public static class CardExtensions
 {
     public static IEnumerable<Card> FindCards(this IEnumerable<Card> cards, Side? rightSide = null, Side? bottomSide = null)
     {
-        var nextCards = cards
-            .Where(x => rightSide == null || x.HasMatchingSide(rightSide))
-            .Where(x => bottomSide == null || x.HasMatchingSide(bottomSide));
-
-        if (rightSide != null && bottomSide != null)
+        var nextCards = (rightSide, bottomSide) switch
         {
-            nextCards = nextCards.Where(x => x.HasMatchingCorner(rightSide, bottomSide));
-        }
+            (not null, not null) => cards.Where(x => x.HasMatchingCorner(rightSide, bottomSide)),
+            (not null, _) => cards.Where(x => x.HasMatchingSide(rightSide)),
+            (_, not null) => cards.Where(x => x.HasMatchingSide(bottomSide)),
+            _ => []
+        };
         
+        const int maxRotations = 4;
         foreach (var card in nextCards)
         {
             var nextCard = card;
-            var maxRotations = 4;
             var rotations = 0;
             while (!IsCorrectRotation(nextCard))
             {
@@ -27,6 +26,7 @@ public static class CardExtensions
                     break;
                 }
                 
+                // Rotate card and check again
                 nextCard = nextCard.Rotate();
                 rotations++;
             }
@@ -39,8 +39,8 @@ public static class CardExtensions
         
         bool IsCorrectRotation(Card nextCard)
         {
-            var rightMatch = rightSide == null || rightSide.Equals(nextCard.Left.Opposite());
-            var bottomMatch = bottomSide == null || bottomSide.Equals(nextCard.Top.Opposite());
+            var rightMatch = rightSide == null || rightSide.Matches(nextCard.Left);
+            var bottomMatch = bottomSide == null || bottomSide.Matches(nextCard.Top);
             return rightMatch && bottomMatch;
         }
     }

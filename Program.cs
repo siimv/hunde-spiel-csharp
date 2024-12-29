@@ -4,9 +4,6 @@ using ConfoundedDogGame;
 using ConfoundedDogGame.Players;
 using ConfoundedDogGame.Visualizers;
 
-var visualizer = new DefaultVisualizer();
-// var visualizer = new AsciiVisualizer();
-
 var random = new Random();
 // Try out different ordering, each one of them should produce the same result
 IEnumerable<Card>[] tiles =
@@ -24,6 +21,9 @@ IEnumerable<Card>[] tiles =
     // Game.Tiles.OrderBy(x => random.Next()).Select(x => x.Rotate()),
     // Game.Tiles.OrderBy(x => random.Next()).Select(x => x.Rotate().Rotate())
 ];
+
+var visualizer = new DefaultVisualizer();
+// var visualizer = new AsciiVisualizer();
 
 //TODO: Add filters for visually different cards
 foreach (var tile in tiles)
