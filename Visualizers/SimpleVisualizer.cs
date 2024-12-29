@@ -2,7 +2,7 @@ using System.Text;
 
 namespace ConfoundedDogGame.Visualizers;
 
-public class DefaultVisualizer : IVisualizer
+public class SimpleVisualizer : IVisualizer
 {
     public string Visualize(Card? card)
     {

@@ -29,43 +29,25 @@ public class BranchBasedPlayer
         return card;
     }
 
-    private static IEnumerable<Card> FindAllStartingCardCombinations(IEnumerable<Card> source)
-    {
-        foreach (var card in source)
-        {
-            var currentCard = card;
-
-            // yield original card
-            yield return currentCard;
-
-            // yield other rotations
-            foreach (var _ in Enumerable.Range(0, 3))
-            {
-                currentCard = currentCard.Rotate();
-                yield return currentCard;
-            }
-        }
-    }
-
     /// <summary>
     /// Card matchers for each specific place
     /// </summary>
     private Func<Queue<Card>>[][] NextCardAccessors =>
     [
         [
-            () => new(FindAllStartingCardCombinations(_availableCards)),
-            () => new(_availableCards.FindCards(_board[0, 0]!.Right)),
-            () => new(_availableCards.FindCards(_board[0, 1]!.Right))
+            () => new(_availableCards.SelectMany(x => x.Rotations())),
+            () => new(_availableCards.FindMatchingCards(_board[0, 0]!.Right)),
+            () => new(_availableCards.FindMatchingCards(_board[0, 1]!.Right))
         ],
         [
-            () => new(_availableCards.FindCards(bottomSide: _board[0, 0]!.Bottom)),
-            () => new(_availableCards.FindCards(rightSide: _board[1, 0]!.Right, bottomSide: _board[0, 1]!.Bottom)),
-            () => new(_availableCards.FindCards(rightSide: _board[1, 1]!.Right, bottomSide: _board[0, 2]!.Bottom))
+            () => new(_availableCards.FindMatchingCards(bottomSide: _board[0, 0]!.Bottom)),
+            () => new(_availableCards.FindMatchingCards(rightSide: _board[1, 0]!.Right, bottomSide: _board[0, 1]!.Bottom)),
+            () => new(_availableCards.FindMatchingCards(rightSide: _board[1, 1]!.Right, bottomSide: _board[0, 2]!.Bottom))
         ],
         [
-            () => new(_availableCards.FindCards(bottomSide: _board[1, 0]!.Bottom)),
-            () => new(_availableCards.FindCards(rightSide: _board[2, 0]!.Right, bottomSide: _board[1, 1]!.Bottom)),
-            () => new(_availableCards.FindCards(rightSide: _board[2, 1]!.Right, bottomSide: _board[1, 2]!.Bottom))
+            () => new(_availableCards.FindMatchingCards(bottomSide: _board[1, 0]!.Bottom)),
+            () => new(_availableCards.FindMatchingCards(rightSide: _board[2, 0]!.Right, bottomSide: _board[1, 1]!.Bottom)),
+            () => new(_availableCards.FindMatchingCards(rightSide: _board[2, 1]!.Right, bottomSide: _board[1, 2]!.Bottom))
         ]
     ];
 

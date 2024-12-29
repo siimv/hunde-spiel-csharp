@@ -18,9 +18,24 @@ public class Card(int number, Side a, Side b, Side c, Side d) : IEquatable<Card>
         return new Card(Number, Top, Right, Bottom, Left);
     }
     
-    public Card Rotate()
+    private Card Rotate()
     {
         return new (Number, Left, Top, Right, Bottom);
+    }
+
+    public IEnumerable<Card> Rotations()
+    {
+        const int maxRotations = 4;
+        var lastRotation = this;
+        
+        var rotations = 0;
+        do
+        {
+            yield return lastRotation;
+            lastRotation = lastRotation.Rotate();
+            rotations++;
+        }
+        while(rotations < maxRotations);
     }
 
     public bool Equals(Card? other)
