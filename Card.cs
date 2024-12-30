@@ -18,7 +18,7 @@ public class Card(int number, Side a, Side b, Side c, Side d) : IEquatable<Card>
         return new Card(Number, Top, Right, Bottom, Left);
     }
     
-    private Card Rotate()
+    public Card Rotate()
     {
         return new (Number, Left, Top, Right, Bottom);
     }

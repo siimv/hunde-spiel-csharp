@@ -9,25 +9,24 @@ var random = new Random();
 IEnumerable<Card>[] shuffledCardDecks =
 [
     Game.Tiles,
-    Game.Tiles.OrderBy(x => x.Number),
-    Game.Tiles.OrderBy(x => x.Number).Select(x => x.Rotations().ElementAt(1)),
-    Game.Tiles.OrderBy(x => x.Number).Select(x => x.Rotations().ElementAt(2)),
-    Game.Tiles.OrderBy(x => x.Number).Select(x => x.Rotations().ElementAt(3)),
-    Game.Tiles.OrderByDescending(x => x.Number),
-    Game.Tiles.OrderByDescending(x => x.Number).Select(x => x.Rotations().ElementAt(1)),
-    Game.Tiles.OrderByDescending(x => x.Number).Select(x => x.Rotations().ElementAt(2)),
-    Game.Tiles.OrderBy(x => random.Next()).Select(x => x.Rotations().ElementAt(1)),
-    Game.Tiles.OrderBy(x => random.Next()).Select(x => x.Rotations().ElementAt(2))
+    // Game.Tiles.OrderBy(x => x.Number),
+    // Game.Tiles.OrderBy(x => x.Number).Select(x => x.Rotations().ElementAt(1)),
+    // Game.Tiles.OrderBy(x => x.Number).Select(x => x.Rotations().ElementAt(2)),
+    // Game.Tiles.OrderBy(x => x.Number).Select(x => x.Rotations().ElementAt(3)),
+    // Game.Tiles.OrderByDescending(x => x.Number),
+    // Game.Tiles.OrderByDescending(x => x.Number).Select(x => x.Rotations().ElementAt(1)),
+    // Game.Tiles.OrderByDescending(x => x.Number).Select(x => x.Rotations().ElementAt(2)),
+    // Game.Tiles.OrderBy(x => random.Next()).Select(x => x.Rotations().ElementAt(1)),
+    // Game.Tiles.OrderBy(x => random.Next()).Select(x => x.Rotations().ElementAt(2))
 ];
 
 var visualizer = new SimpleVisualizer();
 // var visualizer = new AsciiVisualizer();
 
-//TODO: Add filters for visually different cards
 foreach (var cardDeck in shuffledCardDecks)
 {
     var player = new BranchBasedPlayer(cardDeck);
-    var boards = player.Play()
+    var result = player.Play()
         .Aggregate(new
         {
             TotalNrOfBoards = 0,
@@ -54,13 +53,16 @@ foreach (var cardDeck in shuffledCardDecks)
         });
 
     Console.WriteLine("----------");
-    Console.WriteLine($"Total nr of boards: {boards.TotalNrOfBoards}");
-    Console.WriteLine($"Nr of complete boards: {boards.NrOfCompletedBoards}");
-    Console.WriteLine($"Nr of final (solution) boards: {boards.CorrectBoards.Count}");
+    Console.WriteLine($"Total nr of boards: {result.TotalNrOfBoards}");
+    Console.WriteLine($"Nr of complete boards: {result.NrOfCompletedBoards}");
+    Console.WriteLine($"Nr of final (solution) boards: {result.CorrectBoards.Count}");
+    
+    var distinctBoards = result.CorrectBoards.DistinctBy(x => x, new VisualEqualityComparer()).ToArray();
+    Console.WriteLine($"Nr of distinct boards: {distinctBoards.Length}");
 
-    // foreach (var board in boards.CorrectBoards)
-    // {
-    //     Console.WriteLine("----------");
-    //     Console.WriteLine(visualizer.VisualizeBoard(board));
-    // }
+    foreach (var board in distinctBoards)
+    {
+        Console.WriteLine("----------");
+        Console.WriteLine(visualizer.VisualizeBoard(board));
+    }
 }
